@@ -1,19 +1,21 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
+[[ main ]]
+
+-- called once at startup
 function _init()
-  -- called once at startup
+  
 end
  
- 
+-- called once per update
 function _update60()
-  -- called once per update
+  
 end
  
- 
+-- called once per frame
 function _draw()
-  -- called once per
-  -- visible frame
+  
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
