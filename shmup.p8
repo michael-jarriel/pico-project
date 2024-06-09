@@ -74,6 +74,9 @@ end
 -->8
 -- ∧enemy handler∧ --
 enemy_handler = {
+  ready = false,
+  respawn = false,
+  respawn_timer = 0,
   enemies = {},
   formations = {
     -- rows
@@ -108,6 +111,14 @@ enemy_handler = {
 		    {"🅾️","❎","🅾️","❎","🅾️","❎","🅾️"},
 		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"}
 		  },
+		  -- target
+		  {
+		    {"❎","❎","❎","❎","❎","❎","❎"},
+		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"},
+		    {"❎","🅾️","❎","❎","❎","🅾️","❎"},
+		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"},
+		    {"❎","❎","❎","❎","❎","❎","❎"}
+		  }
   }
 }
 
@@ -122,32 +133,80 @@ function update_enemy_handler()
       update_enemy(enemy)
     end
   end
+  
+  if not enemy_handler.ready do
+    local move = true
+  	 for enemy in all(enemy_handler.enemies) do
+  	   if not enemy.ready do
+  	     move = false
+  	   end
+  	 end
+  	 if move do
+  	   enemy_handler.ready = true
+  	 end
+  end
+  
+  if count(enemy_handler.enemies) == 0 do
+    enemy_handler.ready = false
+    enemy_handler.respawn = true
+  end
+  
+  if enemy_handler.respawn do
+    enemy_handler.respawn_timer += 1
+    if enemy_handler.respawn_timer == 30 do
+      enemy_handler.respawn = false
+      enemy_handler.respawn_timer = 0
+      instantiate_enemies(flr(rnd(count(enemy_handler.formations)))+1)
+    end
+  end
 end
 
 
 function update_enemy(enemy)
-  enemy.move_counter += 1
-  enemy.move_counter2 += 1
+  if enemy_handler.ready do
+    enemy.move_counter += 1
+    enemy.move_counter2 += 1
 
-  --vertical movement
-  if enemy.move_counter == 60 do
-    enemy.y_pos += enemy.y_spd
-    enemy.move_counter = 0
-  end
+    --vertical movement
+    if enemy.move_counter == 60 do
+      enemy.y_pos += enemy.y_spd
+      enemy.move_counter = 0
+    end
   
-  -- horizontal movement
-  if enemy.move_counter2 == 10 do
-    if enemy.move_left == true do
-      enemy.x_pos -= 1
-    else
-      enemy.x_pos += 1
-    end
-    enemy.move_counter2 = 0
+    -- horizontal movement
+    if enemy.move_counter2 == 10 do
+      if enemy.move_left == true do
+        enemy.x_pos -= 1
+      else
+        enemy.x_pos += 1
+      end
+      enemy.move_counter2 = 0
     
-    if abs(enemy.x_pos - enemy.x_start) > 1 do
-      enemy.move_left = not enemy.move_left
-    end
+      if abs(enemy.x_pos - enemy.x_start) > 1 do
+        enemy.move_left = not enemy.move_left
+      end
     
+    end
+  elseif not enemy.ready do
+  
+    -- get unit vector
+    local delta_x = enemy.x_start - enemy.x_pos
+    local delta_y = enemy.y_start - enemy.y_pos
+    local magnitude = sqrt((delta_x)^2+(delta_y)^2)
+    local unit_x = delta_x/magnitude
+    local unit_y = delta_y/magnitude
+    
+    -- move
+    enemy.x_pos += unit_x * 4
+    enemy.y_pos += unit_y * 4
+    
+    -- dont overshoot
+    if enemy.y_pos >= enemy.y_start do
+      enemy.y_pos = enemy.y_start
+      enemy.x_pos = enemy.x_start
+      enemy.ready = true
+    end
+  
   end
 end
 
@@ -175,15 +234,18 @@ function instantiate_enemies(index)
     for element in all(row) do
       if element == "❎" then
         enemy = {
-          x_pos = x_spawn,
-          y_pos = y_spawn,
+          x_pos = 60,
+          y_pos = -8,
+          x_start = x_spawn,
+          y_start = y_spawn,
           width = 8,
           height = 8,
           y_spd = 8,
           move_counter = 0,
           move_counter2 = 0,
           move_left = move_dir,
-          x_start = x_spawn
+          x_start = x_spawn,
+          ready = false
         }
         add(enemy_handler.enemies, enemy)
       end
@@ -194,6 +256,8 @@ function instantiate_enemies(index)
     move_dir = not move_dir
   end
 end
+
+
 -->8
 -- ∧bullet handler∧ --
 
@@ -219,7 +283,7 @@ function update_bullet(bullet)
     del(bullets, bullet)
   end
   for enemy in all(enemy_handler.enemies) do
-    if check_collision(bullet, enemy) do
+    if enemy_handler.ready and check_collision(bullet, enemy) do
       del(enemy_handler.enemies, enemy)
       del(bullets, bullet)
     end
@@ -276,7 +340,7 @@ end
 
 
 function update_star(star)
-  star.y_pos += star.depth / 25
+  star.y_pos += star.depth / 20
   if star.y_pos > 128 do
     star.y_pos = 0
   end
