@@ -26,6 +26,7 @@ function _draw()
   draw_player_handler()
   draw_enemy_handler()
   draw_bullet_handler()
+  rect(0, 0,127, 127, 2)
 end
 -->8
 -- ∧player handler∧ --
@@ -43,16 +44,16 @@ end
 
 
 function update_player_handler()
-  if btn(⬆️) do
+  if btn(⬆️) and player.y_pos > 1 do
     player.y_pos -= 1
   end
-  if btn(⬇️) do
+  if btn(⬇️) and player.y_pos < 119 do
     player.y_pos += 1
   end
-  if btn(⬅️) do
+  if btn(⬅️) and player.x_pos > 1 do
     player.x_pos -= 1
   end
-  if btn(➡️) do
+  if btn(➡️) and player.x_pos < 119 do
     player.x_pos += 1
   end
   
@@ -126,6 +127,14 @@ enemy_handler = {
 		    {"🅾️","❎","🅾️","🅾️","🅾️","❎","🅾️"},
 		    {"🅾️","❎","❎","❎","❎","❎","🅾️"},
 		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"}
+		  },
+		  -- pointy pyramid
+		  {
+		    {"🅾️","🅾️","🅾️","❎","🅾️","🅾️","🅾️"},
+		    {"🅾️","🅾️","🅾️","❎","🅾️","🅾️","🅾️"},
+		    {"🅾️","🅾️","❎","❎","❎","🅾️","🅾️"},
+		    {"🅾️","❎","❎","❎","❎","❎","🅾️"},
+		    {"❎","❎","❎","❎","❎","❎","❎"}
 		  }
   }
 }
@@ -240,7 +249,7 @@ end
 function instantiate_enemies(index)
   local formation = enemy_handler.formations[index]
   local x_spawn = 11
-  local y_spawn = 0
+  local y_spawn = 10
   local move_dir = true
   for row in all(formation) do
     for element in all(row) do
