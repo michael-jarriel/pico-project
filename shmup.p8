@@ -1,43 +1,73 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
-`-- ∧main∧ --
+-- ∧main∧ --
 
 -- called once at startup
 function _init()
+  init_bg_handler()
+  init_player_handler()
   init_enemy_handler()
+  init_bullet_handler()
+  init_collision_handler()
 end
  
 -- called once per update
 function _update60()
+  update_bg_handler()
+  update_player_handler()
   update_enemy_handler()
+  update_bullet_handler()
+  update_collision_handler()
 end
  
 -- called once per frame
 function _draw()
   cls(0)
+  draw_bg_handler()
+  draw_player_handler()
   draw_enemy_handler()
+  draw_bullet_handler()
 end
 -->8
--- ∧basic enemy∧ --
+-- ∧player handler∧ --
 
-enemy = {
-  x_pos = 0,
-  y_pos = 0
+player = {
+  x_pos = 60,
+  y_pos = 100
 }
 
-function init_enemy()
-  
+function init_player_handler()
+
 end
 
 
-function update_enemy()
+function update_player_handler()
+  if btn(⬆️) do
+    player.y_pos -= 1
+  end
+  if btn(⬇️) do
+    player.y_pos += 1
+  end
+  if btn(⬅️) do
+    player.x_pos -= 1
+  end
+  if btn(➡️) do
+    player.x_pos += 1
+  end
   
+  if btnp(❎) do
+    bullet = {
+      x_pos = player.x_pos,
+      y_pos = player.y_pos
+    }
+    add(bullets, bullet)
+  end
 end
 
 
-function draw_enemy()
-  spr(192, x_pos, y_pos)
+function draw_player_handler()
+  spr(193, player.x_pos, player.y_pos)
 end
 -->8
 -- ∧enemy handler∧ --
@@ -46,58 +76,221 @@ enemy_handler = {
   formations = {
     -- rows
 		  {
-		    {x,x,x,x,x},
-		    {x,x,x,x,x},
-		    {x,x,x,x,x},
-		    {x,x,x,x,x},
-		    {x,x,x,x,x}
+		    {"❎","❎","❎","❎","❎","❎","❎"},
+		    {"🅾️","🅾️","🅾️","🅾️","🅾️","🅾️","🅾️"},
+		    {"❎","❎","❎","❎","❎","❎","❎"},
+		    {"🅾️","🅾️","🅾️","🅾️","🅾️","🅾️","🅾️"},
+		    {"❎","❎","❎","❎","❎","❎","❎"}
 		  },
 		  -- box
 		  {
-		    {x,x,x,x,x},
-		    {x,o,o,o,x},
-		    {x,o,o,o,x},
-		    {x,o,o,o,x},
-		    {x,x,x,x,x}
+		    {"❎","❎","❎","❎","❎","❎","❎"},
+		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"},
+		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"},
+		    {"❎","🅾️","🅾️","🅾️","🅾️","🅾️","❎"},
+		    {"❎","❎","❎","❎","❎","❎","❎"}
 		  },
-		  -- x
+		  -- m
 		  {
-		    {x,o,o,o,x},
-		    {o,x,o,x,o},
-		    {o,o,x,o,o},
-		    {o,x,o,x,o},
-		    {x,o,o,o,x}
-		  }
+		    {"❎","❎","❎","🅾️","❎","❎","❎"},
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"},
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"},
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"},
+		    {"❎","🅾️","❎","❎","❎","🅾️","❎"}
+		  },
+		  -- checkers
+		  {
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"},
+		    {"🅾️","❎","🅾️","❎","🅾️","❎","🅾️"},
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"},
+		    {"🅾️","❎","🅾️","❎","🅾️","❎","🅾️"},
+		    {"❎","🅾️","❎","🅾️","❎","🅾️","❎"}
+		  },
   }
 }
 
 function init_enemy_handler()
-  instantiate_enemies(flr(rnd(count(formations)))+1)
+  instantiate_enemies(flr(rnd(count(enemy_handler.formations)))+1)
 end
 
 
 function update_enemy_handler()
+  for enemy in all(enemy_handler.enemies) do
+    if enemy ~= nil do
+      update_enemy(enemy)
+    end
+  end
+end
 
+
+function update_enemy(enemy)
+  enemy.move_counter += 1
+  enemy.move_counter2 += 1
+
+  --vertical movement
+  if enemy.move_counter == 60 do
+    enemy.y_pos += enemy.y_spd
+    enemy.move_counter = 0
+  end
+  
+  -- horizontal movement
+  if enemy.move_counter2 == 10 do
+    if enemy.move_left == true do
+      enemy.x_pos -= 1
+    else
+      enemy.x_pos += 1
+    end
+    enemy.move_counter2 = 0
+    
+    if abs(enemy.x_pos - enemy.x_start) > 1 do
+      enemy.move_left = not enemy.move_left
+    end
+    
+  end
 end
 
 
 function draw_enemy_handler()
   for enemy in all(enemy_handler.enemies) do
-    enemy.draw_enemy()
+    if enemy ~= nil do
+      draw_enemy(enemy)
+    end
   end
 end
 
 
+function draw_enemy(enemy)
+  spr(192, enemy.x_pos, enemy.y_pos)
+end
+
+
 function instantiate_enemies(index)
-  formation = enemy_handler.formations[index]
-  x_pos = 0
-  y_pos = 0
+  local formation = enemy_handler.formations[index]
+  local x_spawn = 11
+  local y_spawn = 0
+  local move_dir = true
   for row in all(formation) do
-    for enemy in all(row) do
-      //todo: instantiate enemy
+    for element in all(row) do
+      if element == "❎" then
+        enemy = {
+          x_pos = x_spawn,
+          y_pos = y_spawn,
+          y_spd = 8,
+          move_counter = 0,
+          move_counter2 = 0,
+          move_left = move_dir,
+          x_start = x_spawn
+        }
+        add(enemy_handler.enemies, enemy)
+      end
+      x_spawn += 16
     end
-    y_pos + 32
+    x_spawn = 11
+    y_spawn += 10
+    move_dir = not move_dir
   end
+end
+-->8
+-- ∧bullet handler∧ --
+
+bullets = {}
+
+function init_bullet_handler()
+
+end
+
+
+function update_bullet_handler()
+  for bullet in all(bullets) do
+    if bullet ~= nil do
+      update_bullet(bullet)
+    end
+  end
+end
+
+
+function update_bullet(bullet)
+  bullet.y_pos -= 2
+end
+
+
+function draw_bullet_handler()
+  for bullet in all(bullets) do
+    if bullet ~= nil do
+      draw_bullet(bullet)
+    end
+  end
+end
+
+
+function draw_bullet(bullet)
+  spr(194, bullet.x_pos, bullet.y_pos)
+end
+-->8
+-- ∧bg handler∧ --
+
+stars = {}
+
+function init_bg_handler()
+  local curr_x = 0
+  local curr_y = 0
+  while curr_y < 128 do
+    while curr_x < 128 do
+      local num = flr(rnd(100))+1
+      if (num <= 5) do
+        star = {
+          x_pos = curr_x,
+          y_pos = curr_y,
+          depth = flr(rnd(3))+1
+        }
+        add(stars, star)
+      end
+      curr_x += 4
+    end
+    curr_x = 0
+    curr_y += 4
+  end
+end
+
+
+function update_bg_handler()
+  for star in all(stars) do
+    if star ~= nil do
+      update_star(star)
+    end
+  end
+end
+
+
+function update_star(star)
+  star.y_pos += star.depth / 25
+  if star.y_pos > 128 do
+    star.y_pos = 0
+  end
+end
+
+
+function draw_bg_handler()
+  for star in all(stars) do
+    if star ~= nil do
+      draw_star(star)
+    end
+  end
+end
+
+function draw_star(star)
+  spr(195, star.x_pos, star.y_pos)
+end
+-->8
+-- ∧collision handler∧ --
+
+function init_collision_handler()
+
+end
+
+
+function update_collision_handler()
+  
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -196,11 +389,11 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00888800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08888880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88088088000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88888888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88888888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0088880000066000000aa00070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+088888800cccccc0000aa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+88088088cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+88888888cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+88888888cccddccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08000080ccc00ccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08000080ccc00ccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+080000808a0000a80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
