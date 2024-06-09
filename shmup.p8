@@ -9,7 +9,6 @@ function _init()
   init_player_handler()
   init_enemy_handler()
   init_bullet_handler()
-  init_collision_handler()
 end
  
 -- called once per update
@@ -18,7 +17,6 @@ function _update60()
   update_player_handler()
   update_enemy_handler()
   update_bullet_handler()
-  update_collision_handler()
 end
  
 -- called once per frame
@@ -34,7 +32,9 @@ end
 
 player = {
   x_pos = 60,
-  y_pos = 100
+  y_pos = 100,
+  width = 8,
+  height = 8
 }
 
 function init_player_handler()
@@ -58,8 +58,10 @@ function update_player_handler()
   
   if btnp(❎) do
     bullet = {
-      x_pos = player.x_pos,
-      y_pos = player.y_pos
+      x_pos = player.x_pos+3,
+      y_pos = player.y_pos,
+      width = 2,
+      height = 2
     }
     add(bullets, bullet)
   end
@@ -175,6 +177,8 @@ function instantiate_enemies(index)
         enemy = {
           x_pos = x_spawn,
           y_pos = y_spawn,
+          width = 8,
+          height = 8,
           y_spd = 8,
           move_counter = 0,
           move_counter2 = 0,
@@ -211,6 +215,15 @@ end
 
 function update_bullet(bullet)
   bullet.y_pos -= 2
+  if bullet.y_pos < -5 do
+    del(bullets, bullet)
+  end
+  for enemy in all(enemy_handler.enemies) do
+    if check_collision(bullet, enemy) do
+      del(enemy_handler.enemies, enemy)
+      del(bullets, bullet)
+    end
+  end
 end
 
 
@@ -284,13 +297,17 @@ end
 -->8
 -- ∧collision handler∧ --
 
-function init_collision_handler()
-
-end
-
-
-function update_collision_handler()
+function check_collision(obj1, obj2)
   
+  if (
+    (obj1.x_pos < obj2.x_pos + obj2.width) and
+    (obj1.x_pos + obj1.width > obj2.x_pos) and
+    (obj1.y_pos < obj2.y_pos + obj2.height) and
+    (obj1.y_pos + obj1.height > obj2.y_pos)) do
+    return true 
+  else
+    return false
+  end
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -389,8 +406,8 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0088880000066000000aa00070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-088888800cccccc0000aa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0088880000066000aa00000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+088888800cccccc0aa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 88088088cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 88888888cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 88888888cccddccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
