@@ -284,12 +284,6 @@ function draw_enemy_handler()
   end
 end
 
-
-function draw_enemy(enemy)
-  spr(enemy.spr_index, enemy.x_pos, enemy.y_pos)
-end
-
-
 function instantiate_enemies(index)
   local formation = enemy_handler.formations[index]
   local x_spawn = 11
