@@ -95,6 +95,10 @@ enemy_prototype = {
 	  	  x_start = x_spawn,
 	  	  y_start = y_spawn,
 	  	  move_left = move_dir,
+	  	  --[[
+	  	  have to randmoly index
+	  	  at instantaion
+	     ]] 
 	  	  spr_index = 208 + flr(rnd(3))
 	   }
 	   setmetatable(o, self)
@@ -178,7 +182,7 @@ enemy_handler = {
 }
 
 function init_enemy_handler()
-  //randomly index the formation list
+  -- randomly index the formation list
   instantiate_enemies(flr(rnd(count(enemy_handler.formations)))+1)
 end
 
@@ -275,7 +279,6 @@ end
 function draw_enemy_handler()
   for enemy in all(enemy_handler.enemies) do
     if enemy ~= nil do
-      //draw_enemy(enemy)
       enemy:draw()
     end
   end
