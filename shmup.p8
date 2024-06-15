@@ -2,7 +2,6 @@ pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
 -- ∧main∧ --
-
 -- called once at startup
 function _init()
   init_bg_handler()
@@ -74,6 +73,45 @@ function draw_player_handler()
 end
 -->8
 -- ∧enemy handler∧ --
+
+-- enemy prototype/"class"
+enemy_prototype = {
+  x_pos = 60,
+  y_pos = -8,
+  width = 8,
+  height = 8,
+  y_spd = 8,
+  move_counter = 0,
+  move_counter2 = 0,
+  ready = false,
+  -- here's the constructor
+  new = function(
+    self,
+    x_spawn,
+    y_spawn,
+    move_dir
+    )
+    o = {
+	  	  x_start = x_spawn,
+	  	  y_start = y_spawn,
+	  	  move_left = move_dir,
+	  	  spr_index = 208 + flr(rnd(3))
+	   }
+	   setmetatable(o, self)
+	   return o
+  end,
+  -- draw instance method
+  draw = function(self)
+  		spr(self.spr_index, self.x_pos, self.y_pos)
+  end
+}
+
+--[[ required by lua for accessing
+					metatables's index
+]]
+enemy_prototype.__index =
+		enemy_prototype
+
 enemy_handler = {
   ready = false,
   respawn = false,
@@ -140,6 +178,7 @@ enemy_handler = {
 }
 
 function init_enemy_handler()
+  //randomly index the formation list
   instantiate_enemies(flr(rnd(count(enemy_handler.formations)))+1)
 end
 
@@ -178,7 +217,7 @@ function update_enemy_handler()
   end
 end
 
-
+-- to be called in the update loop
 function update_enemy(enemy)
   if enemy.y_pos > 130 do
     del(enemy_handler.enemies, enemy)
@@ -218,6 +257,7 @@ function update_enemy(enemy)
     local unit_y = delta_y/magnitude
     
     -- move
+    -- acc/bounce curve?
     enemy.x_pos += unit_x * 3
     enemy.y_pos += unit_y * 3
     
@@ -235,7 +275,8 @@ end
 function draw_enemy_handler()
   for enemy in all(enemy_handler.enemies) do
     if enemy ~= nil do
-      draw_enemy(enemy)
+      //draw_enemy(enemy)
+      enemy:draw()
     end
   end
 end
@@ -254,22 +295,8 @@ function instantiate_enemies(index)
   for row in all(formation) do
     for element in all(row) do
       if element == "❎" then
-        enemy = {
-          x_pos = 60,
-          y_pos = -8,
-          x_start = x_spawn,
-          y_start = y_spawn,
-          width = 8,
-          height = 8,
-          y_spd = 8,
-          move_counter = 0,
-          move_counter2 = 0,
-          move_left = move_dir,
-          x_start = x_spawn,
-          ready = false,
-          spr_index = 208 + flr(rnd(3))
-        }
-        add(enemy_handler.enemies, enemy)
+        e = enemy_prototype:new(x_spawn, y_spawn, move_dir)
+        add(enemy_handler.enemies, e)
       end
       x_spawn += 16
     end
@@ -333,6 +360,7 @@ stars = {}
 function init_bg_handler()
   local curr_x = 0
   local curr_y = 0
+  //stop()
   while curr_y < 128 do
     while curr_x < 128 do
       local num = flr(rnd(100))+1
