@@ -34,7 +34,8 @@ player = {
   x_pos = 60,
   y_pos = 100,
   width = 8,
-  height = 8
+  height = 8,
+  fire_sfx = 0
 }
 
 function init_player_handler()
@@ -57,6 +58,7 @@ function update_player_handler()
   end
   
   if btnp(❎) do
+    sfx(player.fire_sfx)
     bullet = {
       x_pos = player.x_pos+3,
       y_pos = player.y_pos,
@@ -111,7 +113,7 @@ enemy_prototype = {
 }
 
 --[[ required by lua for accessing
-					metatables's index
+  metatables's index
 ]]
 enemy_prototype.__index =
 		enemy_prototype
@@ -120,6 +122,7 @@ enemy_handler = {
   ready = false,
   respawn = false,
   respawn_timer = 0,
+  death_sfx = 1,
   enemies = {},
   formations = {
     -- rows
@@ -330,6 +333,7 @@ function update_bullet(bullet)
   end
   for enemy in all(enemy_handler.enemies) do
     if enemy_handler.ready and check_collision(bullet, enemy) do
+      sfx(enemy_handler.death_sfx)
       del(enemy_handler.enemies, enemy)
       del(bullets, bullet)
     end
@@ -533,3 +537,6 @@ __gfx__
 080000800b0000b00c0000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 080000800b0000b00c0000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 080000800b0000b00c0000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+a7010000310563105631056300562f0562d0562a0562705622056210561e0561d0561b0561a0560f0560a05600056000060000600006000060000600006000060000600006000060000600006000060000600006
+d7010000003012f3513035131351323513235131351303512d3512b3512a35128351263512435124351233511f3511635116351103510f3510d35107351053510235102351003510035100301003010030100301
